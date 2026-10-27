@@ -27,6 +27,7 @@ jobs:
         env:
           SECRET_API: ${{ secrets.SECRET_API }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
         run: python main.py
 
       - name: Commit and Push Changes

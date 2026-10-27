@@ -7,10 +7,15 @@ from datetime import datetime
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 
-#
+# جلب الأسرار من الخزنة
 API_URL = os.environ.get("SECRET_API")
 secret_key_str = os.environ.get("SECRET_KEY", "")
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 AES_KEY = secret_key_str.encode('utf-8')
+
+# إعدادات قناتك
+CHAT_ID = "@haideradel"
+SUB_LINK = "https://raw.githubusercontent.com/exhxx1/V2Nodes-Sub/main/sub.txt"
 
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 CUSTOM_TAG = "@exhxx78"
@@ -54,6 +59,46 @@ def rename_server(url, country, index):
     except:
         return url 
 
+def send_telegram_alert(count):
+    """دالة إرسال الإشعار إلى قناة التليجرام"""
+    if not TELEGRAM_TOKEN:
+        print("⚠️ توكن التليجرام غير موجود، لن يتم النشر.")
+        return
+        
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    
+    # تصميم الرسالة (HTML)
+    msg_text = (
+        "✅ <b>تحديث جديد لسيرفرات V2Ray!</b> 🚀\n\n"
+        f"🌍 عدد السيرفرات النشطة: <b>{count}</b> سيرفر\n"
+        "🔄 <i>(يتم تحديث السيرفرات تلقائياً كل 6 ساعات)</i>\n\n"
+        "👇 <b>رابط الاشتراك (اضغط عليه للنسخ):</b>\n"
+        f"<code>{SUB_LINK}</code>\n\n"
+        "🛡 <b>طريقة الاستخدام:</b>\n"
+        "انسخ الرابط أعلاه، واذهب إلى تطبيق (V2RayNG) وأضفه من قائمة الاشتراكات."
+    )
+    
+    # زر الاشتراك الشفاف
+    keyboard = {
+        "inline_keyboard": [
+            [{"text": "🔗 فتح الرابط في المتصفح", "url": SUB_LINK}]
+        ]
+    }
+    
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": msg_text,
+        "parse_mode": "HTML",
+        "reply_markup": json.dumps(keyboard),
+        "disable_web_page_preview": True
+    }
+    
+    try:
+        requests.post(url, data=payload)
+        print("✅ تم النشر في قناة التليجرام بنجاح!")
+    except Exception as e:
+        print(f"❌ فشل النشر في التليجرام: {e}")
+
 def main():
     if not API_URL or not secret_key_str:
         print("❌ الأسرار غير موجودة!")
@@ -84,6 +129,11 @@ def main():
 
     with open("sub.txt", "w", encoding="utf-8") as f:
         f.write(sub_base64)
+        
+    print(f"✅ تم تحديث ملف الاشتراك بعدد {len(valid_servers)} سيرفر.")
+    
+    # تشغيل دالة التليجرام لنشر الرسالة
+    send_telegram_alert(len(valid_servers))
 
 if __name__ == "__main__":
     main()
